@@ -1,0 +1,1 @@
+Hash.d: ../Hash.cpp
