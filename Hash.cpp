@@ -21,9 +21,9 @@ string readBatch(long bSize, fstream& file);
 bool writeBatch(long bSize, long nextLine, string buffer, fs::path& dir, fstream& file);
 
 int main() {
-	string dirSt;
-	cout << "Introduce a directory:\n";
-	cin >> dirSt;
+	string dirSt = "/Users/PhoenixQoH/Desktop/phoyos";
+	//cout << "Introduce a directory:\n";
+	//cin >> dirSt;
 	fs::path dir(dirSt);
 
 	if(!fs::exists(dir) || fs::is_regular_file(dir)) {
@@ -96,7 +96,8 @@ string readBatch(long bSize, fstream& file) {
 	size_t buffSize = STRING_SIZE * bSize;
 	char * buffC = new char[buffSize];
 	file.read(buffC, buffSize);
-	string buffer = buffC;
+	buffC[buffSize] = '\0';
+	string buffer(buffC);
 	return buffer;
 }
 
@@ -126,12 +127,12 @@ bool writeBatch(long bSize, long nextLine, string buffer, fs::path& dir, fstream
 	while(hashes) {
 		file << var;
 		hashes >> var;
-		file.seekg(sizeof(char) * STRING_SIZE - (HASH_SIZE + 1) , file.cur);
+		file.seekg(sizeof(char) * (STRING_SIZE + 1) - (HASH_SIZE + 2) , file.cur);
 	}
 
 	//Put the file pointer back to the beginning of the line
 	file.seekg(-sizeof(char) * STRING_SIZE + HASH_SIZE + 2, file.cur);
-	return indx == string::npos;
+	return count < bSize;
 }
 
 void generateHash(fs::path imgPath, string imgName, stringstream& hashes) {
@@ -140,7 +141,8 @@ void generateHash(fs::path imgPath, string imgName, stringstream& hashes) {
 	Mat initMat = imread(imgPath.string(), IMREAD_GRAYSCALE);
 	Size size(9,8);
 	Mat imgMat;
-
+	string hexValue;
+	stringstream aux;
 	resize(initMat,imgMat,size);
 
 	uchar prev;
@@ -154,7 +156,10 @@ void generateHash(fs::path imgPath, string imgName, stringstream& hashes) {
 			prev = imgMat.at<uchar>(i, j);
 		}
 	}
-	hashes << hex << bits.to_ulong() << ",\n";
+
+	aux << hex << bits.to_ulong();
+	aux >> hexValue;
+	hashes << string(HASH_SIZE - hexValue.size(),'0') << hexValue << ",\n";
 }
 
 void writePictures(const fs::path& path, stringstream& data) {
